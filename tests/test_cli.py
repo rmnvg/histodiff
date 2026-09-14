@@ -194,3 +194,11 @@ def test_broken_pipe_while_writing_is_handled(
     assert main(list(files)) == 1
     assert ("open", (os.devnull, os.O_WRONLY), {}) in calls
     assert any(name == "dup2" for name, _, _ in calls)
+
+
+def test_no_color_environment(files, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    monkeypatch.setenv("NO_COLOR", "1")
+    assert main([*files, "--color"]) == 1
+    out, _ = capsys.readouterr()
+    assert "\x1b[" not in out
+

@@ -527,7 +527,7 @@ def main(
     changed = any(op.tag != "equal" and op.as_opcode() not in ignored for op in ops)
 
     show_moves = args.color_moved or args.dim_moved
-    color = args.color or show_moves
+    color = (args.color or show_moves) and not bool(os.environ.get("NO_COLOR"))
     # Match moved lines the same way the diff matched lines. JSON always
     # includes them, since it's data for other tools.
     moves = find_moves(ops, key=key) if show_moves or args.json else []
