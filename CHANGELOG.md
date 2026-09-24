@@ -8,6 +8,8 @@ alignment while preserving the public data model and valid edit operations.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-25
+
 ### Added
 
 - `--stat` CLI flag for a diffstat-style summary line reporting insertions and
@@ -16,6 +18,8 @@ alignment while preserving the public data model and valid edit operations.
   compatible with whitespace filtering and moved-block detection.
 - `NO_COLOR` support: any non-empty value disables ANSI color output, even
   when `--color`, `--color-words`, `--color-moved` or `--dim-moved` is passed.
+- A runnable difflib migration example (`examples/migrate_from_difflib.py`)
+  with before/after code for the most common migration path.
 
 ### Fixed
 
@@ -44,5 +48,6 @@ alignment while preserving the public data model and valid edit operations.
   the remaining, deliberately untested lines marked `# pragma: no cover`
   and a comment explaining why each is unreachable or untestable in-process.
 
-[Unreleased]: https://github.com/rmnvg/histodiff/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/rmnvg/histodiff/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/rmnvg/histodiff/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/rmnvg/histodiff/releases/tag/v0.1.0

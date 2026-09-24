@@ -8,7 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/rmnvg/histodiff/blob/main/LICENSE)
 
 <p align="center">
-  <img src="assets/demo.gif" width="800" alt="Terminal demo of histodiff highlighting additions, deletions, and changed words">
+  <img src="https://raw.githubusercontent.com/rmnvg/histodiff/main/assets/demo.gif" width="800" alt="Terminal demo of histodiff highlighting additions, deletions, and changed words">
 </p>
 
 ## Before and after
