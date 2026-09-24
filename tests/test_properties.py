@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Callable, Hashable, Sequence
 from typing import Any
 
@@ -20,9 +21,10 @@ from histodiff import (
     patience_diff,
     side_by_side,
     to_json,
+    unified_diff,
 )
 from histodiff._core import build_ops, intern_items
-from histodiff.format import _display_width
+from histodiff.format import _display_width, _stat_summary
 
 ALGORITHMS = [myers_diff, patience_diff, histogram_diff]
 ITEMS = st.one_of(
@@ -236,3 +238,40 @@ def test_side_by_side_never_exceeds_requested_terminal_width(
         [DiffOp("replace", 0, 1, 0, 1, (left,), (right,))], width=width, lineterm=""
     ):
         assert _display_width(line) <= width
+
+
+# Blank and whitespace-only lines exercise -B's hunk-level filtering.
+STAT_LINES = st.lists(st.sampled_from(["x\n", "y\n", "z\n", "\n", " \n"]), max_size=25)
+
+
+@settings(max_examples=300, deadline=None)
+@given(
+    a=STAT_LINES,
+    b=STAT_LINES,
+    ignore_blank_lines=st.booleans(),
+    context=st.integers(min_value=0, max_value=4),
+)
+def test_stat_counts_match_unified_diff_lines(
+    a, b, ignore_blank_lines, context
+) -> None:
+    ops = histogram_diff(a, b)
+    summary = _stat_summary(
+        ops, "a", "b", ignore_blank_lines=ignore_blank_lines, context=context
+    )
+    patch = list(
+        unified_diff(
+            ops,
+            context,
+            fromfile="a",
+            tofile="b",
+            ignore_blank_lines=ignore_blank_lines,
+        )
+    )
+    body = [line for line in patch[2:] if not line.startswith("@@")]
+
+    def reported(noun: str) -> int:
+        match = re.search(rf"(\d+) {noun}s?\(", summary)
+        return int(match[1]) if match else 0
+
+    assert reported("insertion") == sum(line.startswith("+") for line in body)
+    assert reported("deletion") == sum(line.startswith("-") for line in body)

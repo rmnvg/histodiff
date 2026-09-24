@@ -231,14 +231,64 @@ def test_ignore_case_json_preserves_original_lines_and_matches_moves(
     assert doc["moves"][0]["b_lines"] == [moved.upper() + "\n"]
 
 
-@pytest.mark.parametrize("flags", [[], ["-y"], ["--html"], ["--json"], ["--color"]])
+@pytest.mark.parametrize(
+    "flags", [[], ["-y"], ["--html"], ["--json"], ["--color"], ["--stat"]]
+)
 def test_ignore_case_keeps_real_changes(tmp_path, capsys, flags) -> None:
     a = write(tmp_path / "a", ["UNCHANGED", "before"])
     b = write(tmp_path / "b", ["unchanged", "after"])
     assert main([a, b, "-i", *flags]) == 1
     output = capsys.readouterr().out
-    assert "before" in output
-    assert "after" in output
+    if "--stat" in flags:
+        assert f"{a} -> {b}: 1 insertion(+), 1 deletion(-)" in output
+    else:
+        assert "before" in output
+        assert "after" in output
+
+
+def test_cli_stat_diff(files, capsys) -> None:
+    old, new = files
+    assert main([old, new, "--stat"]) == 1
+    out = capsys.readouterr().out
+    assert out.startswith(f"{old} -> {new}: ")
+    assert "insertions(+)" in out
+    assert "deletions(-)" in out
+
+
+def test_cli_stat_counts(tmp_path, capsys) -> None:
+    old = write(tmp_path / "old.py", ["a", "b", "c"])
+    new = write(tmp_path / "new.py", ["a", "b1", "b2", "b3", "c"])
+    assert main([old, new, "--stat"]) == 1
+    expected = f"{old} -> {new}: 3 insertions(+), 1 deletion(-)\n"
+    assert capsys.readouterr().out == expected
+
+    # Pure insertion
+    add_new = write(tmp_path / "add.py", ["a", "b", "c", "d"])
+    assert main([old, add_new, "--stat"]) == 1
+    assert capsys.readouterr().out == f"{old} -> {add_new}: 1 insertion(+)\n"
+
+    # Pure deletion
+    del_new = write(tmp_path / "del.py", ["a", "b"])
+    assert main([old, del_new, "--stat"]) == 1
+    assert capsys.readouterr().out == f"{old} -> {del_new}: 1 deletion(-)\n"
+
+
+def test_cli_stat_identical_exit_0(tmp_path, capsys) -> None:
+    a = write(tmp_path / "a", ["same"])
+    b = write(tmp_path / "b", ["same"])
+    assert main([a, b, "--stat"]) == 0
+    assert capsys.readouterr().out == f"{a} -> {b}: 0 insertions(+), 0 deletions(-)\n"
+
+
+def test_cli_stat_ignore_blank_lines(tmp_path, capsys) -> None:
+    old = write(tmp_path / "old", ["a", "b"])
+    new = write(tmp_path / "new", ["a", "", "b"])
+    assert main([old, new, "-B", "--stat"]) == 0
+    expected = f"{old} -> {new}: 0 insertions(+), 0 deletions(-)\n"
+    assert capsys.readouterr().out == expected
+
+    assert main([old, new, "--stat"]) == 1
+    assert capsys.readouterr().out == f"{old} -> {new}: 1 insertion(+)\n"
 
 
 @pytest.mark.parametrize(

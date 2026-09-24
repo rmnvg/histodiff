@@ -32,6 +32,7 @@ from histodiff.cli import (
     main,
     render_side_by_side,
 )
+from histodiff.format import _stat_summary
 from test_cli import write
 from test_readability import python_function
 
@@ -265,7 +266,15 @@ def test_side_by_side_ignores_blank_only_hunks(tmp_path, capsys) -> None:
 
 def test_cli_output_formats_are_exclusive(tmp_path) -> None:
     old = write(tmp_path / "old", ["a"])
-    for flags in (["-y", "--json"], ["--html", "--json"], ["-y", "--color-words"]):
+    for flags in (
+        ["-y", "--json"],
+        ["--html", "--json"],
+        ["-y", "--color-words"],
+        ["--stat", "--json"],
+        ["--stat", "-y"],
+        ["--stat", "--html"],
+        ["--stat", "--color-words"],
+    ):
         with pytest.raises(SystemExit) as exc:
             main([old, old, *flags])
         assert exc.value.code == 2
@@ -849,3 +858,38 @@ def test_cli_json(tmp_path, capsys) -> None:
 
     assert main([old, old, "--json"]) == 0
     assert [op["tag"] for op in json.loads(capsys.readouterr().out)["ops"]] == ["equal"]
+
+
+# --------------------------------------------------------------------------
+# Stat summary
+# --------------------------------------------------------------------------
+
+
+def test_stat_summary() -> None:
+    ops = diff(["a\n", "b\n", "c\n"], ["a\n", "b2\n", "b3\n", "c\n", "d\n"])
+    assert _stat_summary(ops, "old.py", "new.py") == (
+        "old.py -> new.py: 3 insertions(+), 1 deletion(-)\n"
+    )
+
+    identical_ops = diff(["a\n", "b\n"], ["a\n", "b\n"])
+    assert _stat_summary(identical_ops, "a.py", "b.py") == (
+        "a.py -> b.py: 0 insertions(+), 0 deletions(-)\n"
+    )
+
+    pure_insert_ops = diff(["a\n"], ["a\n", "b\n"])
+    assert _stat_summary(pure_insert_ops, "a", "b") == "a -> b: 1 insertion(+)\n"
+
+    pure_delete_ops = diff(["a\n", "b\n"], ["a\n"])
+    assert _stat_summary(pure_delete_ops, "a", "b") == "a -> b: 1 deletion(-)\n"
+
+
+def test_stat_summary_ignore_blank_lines() -> None:
+    ops = diff(["a\n", "b\n"], ["a\n", "\n", "b\n"])
+    assert (
+        _stat_summary(ops, "a.py", "b.py", ignore_blank_lines=True)
+        == "a.py -> b.py: 0 insertions(+), 0 deletions(-)\n"
+    )
+    assert (
+        _stat_summary(ops, "a.py", "b.py", ignore_blank_lines=False)
+        == "a.py -> b.py: 1 insertion(+)\n"
+    )

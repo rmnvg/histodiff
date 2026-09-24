@@ -627,3 +627,51 @@ def from_json(data: str | bytes) -> list[DiffOp[Any]]:
                     f"histodiff JSON move {number} range and line counts differ"
                 )
     return ops
+
+
+# --------------------------------------------------------------------------
+# Stat summary
+# --------------------------------------------------------------------------
+
+
+def _stat_summary(
+    ops: Iterable[DiffOp[Any]],
+    fromfile: str,
+    tofile: str,
+    *,
+    ignore_blank_lines: bool = False,
+    context: int = 3,
+) -> str:
+    """Format a diffstat-style single-line summary of insertions and deletions.
+
+    Example::
+
+        old.py -> new.py: 3 insertions(+), 1 deletion(-)
+    """
+    ops = list(ops)
+    if ignore_blank_lines:
+        _require_text(ops, "_stat_summary(ignore_blank_lines=True)")
+        ignored = _ignored_blank_opcodes(ops, context)
+    else:
+        ignored = frozenset()
+
+    insertions = sum(
+        len(op.b_lines)
+        for op in ops
+        if op.tag != "equal" and op.as_opcode() not in ignored
+    )
+    deletions = sum(
+        len(op.a_lines)
+        for op in ops
+        if op.tag != "equal" and op.as_opcode() not in ignored
+    )
+    parts: list[str] = []
+    if insertions > 0:
+        parts.append(
+            "1 insertion(+)" if insertions == 1 else f"{insertions} insertions(+)"
+        )
+    if deletions > 0:
+        parts.append("1 deletion(-)" if deletions == 1 else f"{deletions} deletions(-)")
+    if not parts:
+        parts = ["0 insertions(+)", "0 deletions(-)"]
+    return f"{fromfile} -> {tofile}: {', '.join(parts)}\n"

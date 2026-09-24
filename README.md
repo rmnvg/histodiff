@@ -456,6 +456,7 @@ histodiff old.py new.py --dim-moved               # moved blocks dimmed
 histodiff old.py new.py -y -W 160                 # side by side, 160 columns wide
 histodiff old.py new.py --html > diff.html        # standalone HTML page
 histodiff old.py new.py --json | jq '.moves'      # machine-readable ops and moves
+histodiff old.py new.py --stat                    # insertions and deletions summary
 histodiff old.py new.py -U 10                     # 10 lines of context
 histodiff old.py new.py -i                        # ignore case differences
 histodiff old.py new.py -b                        # ignore changes in amount of whitespace
@@ -497,6 +498,7 @@ to see only the changes. It works with `--color`, `--color-moved` and
 numbers and word highlighting, which follows the reader's light or dark
 theme; `-U` controls its context. `--json` prints the diff operations,
 including their lines, and any moved blocks, for other tools to consume.
+`--stat` prints a diffstat-style single-line summary of insertions and deletions.
 These formats print output even when the files are identical.
 `-B` is honored by every format. JSON retains ignored operations for source
 fidelity, marks them as ignored, and reports the effective result in

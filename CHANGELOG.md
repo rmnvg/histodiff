@@ -10,6 +10,8 @@ alignment while preserving the public data model and valid edit operations.
 
 ### Added
 
+- `--stat` CLI flag for a diffstat-style summary line reporting insertions and
+  deletions separately.
 - `-i` / `--ignore-case` for Unicode case-insensitive CLI comparisons,
   compatible with whitespace filtering and moved-block detection.
 - `NO_COLOR` support: any non-empty value disables ANSI color output, even
