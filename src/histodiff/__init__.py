@@ -47,7 +47,7 @@ __all__ = [
     "to_json",
     "unified_diff",
 ]
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 #: Algorithm name -> implementation, for :func:`diff` and the CLI.
 ALGORITHMS: dict[str, Callable[..., list[DiffOp[Any]]]] = {
